@@ -181,12 +181,13 @@ class TwoLayerNet(object):
       #########################################################################
       mask = np.random.choice(num_train, batch_size, replace=True)
       X_batch = X[mask]
-      y_batch = y[mask]      #########################################################################
+      y_batch = y[mask]      
+      #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
 
       # Compute loss and gradients using the current minibatch
-      loss, grads = self.loss(X_batch, y=y_batch, reg=reg)
+      loss, grads = self.loss(X_batch, y_batch, reg)
       loss_history.append(loss)
 
       #########################################################################
@@ -198,8 +199,6 @@ class TwoLayerNet(object):
       for key in grads:
         self.params[key] += -learning_rate * grads[key]
 
-
-      
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
