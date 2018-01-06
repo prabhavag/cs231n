@@ -74,28 +74,29 @@ def softmax_loss_vectorized(W, X, y, reg):
   num_classes = W.shape[1]
   num_train = X.shape[0]
 
-  scores = X.dot(W)
+  scores = np.dot(X, W) # [N x C]
   
   # Scores is now an C X N matrix
   scores = scores.T
-  scores -= np.max(scores, axis = 0)
-  p = np.exp(scores) / np.sum(np.exp(scores), axis = 0)
-
+  scores -= np.max(scores, axis = 0) # Subtracting the max for overflow
+  scores = scores.T
   
-  mask = range(num_train)
-  correct_class_mask = np.zeros((num_train, num_classes))
-  correct_class_mask[mask, y] = 1
+  exp_scores = np.exp(scores) 
+  p = exp_scores / np.sum(exp_scores, axis=1, keepdims=True) # [N X C]
   
-  loss += - np.sum(np.log(p[y, mask]))
-  
-  dW += X.T.dot(p.T) - X.T.dot(correct_class_mask)
-  
-  
-  loss /= num_train
+  #computing the loss
+  loss += -np.sum(np.log(p[range(num_train), y])) / num_train
   loss += 0.5 * reg * np.sum(W * W)
+
+  # gradient on scores
+  dscores = p
+  dscores[range(num_train), y] -= 1
+  dscores /= num_train
   
-  dW /= num_train
+  # backprop the gradient to parameters
+  dW = np.dot(X.T, dscores)
   dW += reg * W
+  
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################

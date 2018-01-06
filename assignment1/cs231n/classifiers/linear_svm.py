@@ -75,15 +75,19 @@ def svm_loss_vectorized(W, X, y, reg):
   #############################################################################
   num_classes = W.shape[1]
   num_train = X.shape[0]
-  scores = X.dot(W)
+  scores = X.dot(W) # [N x C]
+  
+  
   mask = range(num_train)
-  correct_class_scores = scores[mask, y]
-  margins = scores - np.tile(correct_class_scores, (num_classes, 1)).T + 1
+  correct_class_scores = scores[range(num_train), y] # N
   
-  nonneg_margins = np.maximum(0, margins)
-  nonneg_margins[mask, y] = 0
-  loss = np.sum(nonneg_margins) / num_train
+  # Compute margins
+  margins = (scores.T - correct_class_scores + 1).T # [N x C]
+  margins = np.maximum(0, margins)
+  margins[range(num_train), y] = 0
   
+  # Compute data and reg loss
+  loss = np.sum(margins) / num_train
   loss += 0.5 * reg * np.sum(W * W)
 
   #############################################################################
@@ -99,14 +103,13 @@ def svm_loss_vectorized(W, X, y, reg):
   # Hint: Instead of computing the gradient from scratch, it may be easier    #
   # to reuse some of the intermediate values that you used to compute the     #
   # loss. 
-  correct_class_mask = np.zeros((num_train, num_classes))
-  correct_class_multiplier = np.sum(nonneg_margins > 0, axis = 1)
-  correct_class_mask[mask, y] = correct_class_multiplier
+  # Computing gradient wrt scores
+  dscores = (margins > 0).astype(float) # [N x C]
+  dscores[range(num_train), y] -= np.sum(margins > 0, axis = 1)
+  dscores /= num_train
 
-  
-  #############################################################################
-  dW += X.T.dot(nonneg_margins > 0) - X.T.dot(correct_class_mask)
-  dW /= num_train
+  # Computing gradient wrt weights
+  dW = np.dot(X.T, dscores)
   dW += reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
