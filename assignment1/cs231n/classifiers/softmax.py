@@ -89,7 +89,7 @@ def softmax_loss_vectorized(W, X, y, reg):
   loss += 0.5 * reg * np.sum(W * W)
 
   # gradient on scores
-  dscores = p
+  dscores = p.copy()
   dscores[range(num_train), y] -= 1
   dscores /= num_train
   
